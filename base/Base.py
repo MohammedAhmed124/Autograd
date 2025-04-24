@@ -26,12 +26,20 @@ class BaseArray(np.ndarray):
         return rep
 
 
-    def _set_next_object_attributes( self , other , result_obj , grad_fn = None):
+    def _set_next_object_attributes( self , other , result_obj , grad_fn = None , grad_fn_kwargs=None ):
+         if not grad_fn_kwargs:
+            grad_fn_kwargs = {}
          result_obj.grad_fn = grad_fn(ABackward = self.grad_fn if isinstance(self , BaseArray) else None
                                     ,BBackward = other.grad_fn if isinstance(other , BaseArray) else None
-                                    ,ctx = ContextObject(self , other))
+                                    ,ctx = ContextObject(self , other)
+                                    ,**grad_fn_kwargs)
          result_obj._is_leaf = False
          result_obj.requires_grad = True
+
+    def _is_scaler(self):
+        return True if self.shape==() else False
+    
+    
 
 
 

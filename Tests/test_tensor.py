@@ -4,7 +4,7 @@ import pytest
 from tensor import tensor
 
 @pytest.mark.parametrize("case", range(10000))
-def test_grad_function(case):
+def test_tensor_function(case):
     size = (np.random.randint(1, 20), np.random.randint(1, 20))
 
     a = tensor(np.random.randint(-10, 10, size=size), requires_grad=True)

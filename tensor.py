@@ -2,8 +2,7 @@ import numpy as np
 from .functions import *
 from .utils import ContextObject
 from .base import BaseArray , BaseBackwardFunction
-# import numpy as np
-# from functions import *
+
 class tensor(BaseArray):
     def __add__(self , other):
         if not isinstance(other, tensor):
@@ -38,6 +37,9 @@ class tensor(BaseArray):
         
 
     def backward(self):
+        if not self._is_scaler():
+            raise ValueError("backward is only called on scaler values")
+
         def recurse_backwards( grad_fn , grad_output = 1):
             grad_a , grad_b = grad_fn(grad_output=grad_output)
             grad_fn._update_if_leaf(grad_a , grad_b)
@@ -48,11 +50,16 @@ class tensor(BaseArray):
 
         recurse_backwards( self.grad_fn , grad_output = 1)
     
-    def sum(self , axis = 0):
-        result_object =  super(tensor , self).sum(axis = axis)
+    def sum(self , axis = None , keepdims =False , **kwargs):
+        result_object =  super(tensor , self).sum(axis = axis, keepdims =keepdims , **kwargs)
         either_require_grad = getattr(self , "requires_grad" , False)
+
+        
         if either_require_grad:
-            self._set_next_object_attributes( other=None , result_obj=result_object , grad_fn = SumBackward)
+            grad_fn = SumBackward
+            grad_fn_kwargs = {"axis" : axis ,
+                               "keepdims" :keepdims}
+            self._set_next_object_attributes( other=None , result_obj=result_object , grad_fn =grad_fn , grad_fn_kwargs=grad_fn_kwargs )
         
         return result_object
         
