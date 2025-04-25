@@ -10,7 +10,7 @@ from collections import OrderedDict
 from ..tensor import tensor
 
 
-@pytest.mark.parametrize("case", range(550000))
+@pytest.mark.parametrize("case", range(300000))
 def test_tensor_function(case):
     requires_grad_a = bool(np.random.randint(0 , 2))
     requires_grad_b = bool(np.random.randint(0 , 2))

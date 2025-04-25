@@ -11,11 +11,13 @@ class BaseArray(np.ndarray):
         obj.requires_grad = requires_grad
         obj.is_grad_container=False
         obj.grad = np.zeros_like(obj) if requires_grad else None
-        if requires_grad:
-            obj.grad.is_grad_container = True if requires_grad else False
 
         obj.grad_fn = None
         obj._is_leaf = True
+
+
+        if obj._is_leaf and obj.requires_grad:
+            obj.grad.is_grad_container = True
         return obj
     
 
@@ -53,6 +55,14 @@ class BaseArray(np.ndarray):
     def _is_scaler(self):
         return True if self.shape==() else False
     
+    @staticmethod
+    def _any_requires_grad(*args):
+        """Utility to check if any of the tensors in the args require gradients."""
+        return any(getattr(x, 'requires_grad', False) for x in args)
+
+    def _is_grad_container(self):
+        """Utility to check if the tensor has a grad container (stores gradients)."""
+        return getattr(self , "is_grad_container" , False)
 
 
 
