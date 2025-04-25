@@ -55,10 +55,6 @@ class BaseArray(np.ndarray):
     def _is_scaler(self):
         return True if self.shape==() else False
     
-    @staticmethod
-    def _any_requires_grad(*args):
-        """Utility to check if any of the tensors in the args require gradients."""
-        return any(getattr(x, 'requires_grad', False) for x in args)
 
     def _is_grad_container(self):
         """Utility to check if the tensor has a grad container (stores gradients)."""

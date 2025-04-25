@@ -1,16 +1,19 @@
 import numpy as np
 from .functions import *
-from .utils import ContextObject
+from .utils import ContextObject ,block_in_place_autograd
 from .base import BaseArray , BaseBackwardFunction
 from .context import no_grad
 from .config import GlobalConfig
+
+from .utils import _any_requires_grad
+
 
 class tensor(BaseArray):
     def __add__(self , other):
         if not isinstance(other, tensor):
             other = tensor(other)
         result_obj = super(tensor , self).__add__(other)
-        if  BaseArray._any_requires_grad(self, other) and not GlobalConfig.is_propagating_backwards():
+        if  _any_requires_grad(self, other) and not GlobalConfig.is_propagating_backwards():
             self._set_next_object_attributes( other , result_obj , grad_fn = addBackward)
         
 
@@ -19,24 +22,19 @@ class tensor(BaseArray):
         if not isinstance(other, tensor):
             other = tensor(other)
         result_obj = super(tensor , self).__mul__(other)
-        if  BaseArray._any_requires_grad(self, other) and not GlobalConfig.is_propagating_backwards():
+        if  _any_requires_grad(self, other) and not GlobalConfig.is_propagating_backwards():
             self._set_next_object_attributes( other , result_obj , grad_fn = MulBackward)
         
 
         return result_obj
     
+    @block_in_place_autograd
     def __iadd__(self , other):
-        if  BaseArray._any_requires_grad(self, other):
-            if not self._is_grad_container():
-                raise ValueError("in-place modification to variables which require gradients hurts the computational graph\
-                                 . avoid in-place modifications")
         return super(tensor , self).__iadd__(other)
-
+    
+    
+    @block_in_place_autograd
     def __imul__(self , other):
-        if  BaseArray._any_requires_grad(self, other):
-            if not self._is_grad_container():
-                raise ValueError("in-place modification to variables which require gradients hurts the computational graph.\
-                                avoid in-place modifications")
         return super(tensor , self).__imul__(other)
         
 
@@ -62,7 +60,7 @@ class tensor(BaseArray):
         result_object =  super(tensor , self).sum(axis = axis, keepdims =keepdims , **kwargs)
 
         
-        if  BaseArray._any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
+        if  _any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
             grad_fn = SumBackward
             grad_fn_kwargs = {"axis" : axis ,
                                "keepdims" :keepdims}
