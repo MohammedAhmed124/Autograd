@@ -27,7 +27,8 @@ class tensor(BaseArray):
     
     def __iadd__(self , other):
         if getattr(other , "requires_grad" , False) or getattr(other , "requires_grad" , False):
-            raise ValueError("in-place modification to variables which require gradients hurts the computational graph. avoid in-place modifications")
+            if not getattr(self , "is_grad_container" , False):
+                raise ValueError("in-place modification to variables which require gradients hurts the computational graph. avoid in-place modifications")
         return super(tensor , self).__iadd__(other)
 
     def __imul__(self , other):
@@ -39,15 +40,17 @@ class tensor(BaseArray):
     def backward(self):
         if not self._is_scaler():
             raise ValueError("backward is only called on scaler values")
+        
+        if not self.requires_grad:
+            raise ValueError("root tensor does not require grad")
 
         def recurse_backwards( grad_fn , grad_output = 1):
             grad_a , grad_b = grad_fn(grad_output=grad_output)
             grad_fn._update_if_leaf(grad_a , grad_b)
-            if grad_fn.ABackward :
+            if isinstance(grad_fn.ABackward , BaseBackwardFunction) :
                 recurse_backwards( grad_fn.ABackward , grad_output = grad_a)
-            if grad_fn.BBackward :
+            if isinstance(grad_fn.BBackward , BaseBackwardFunction) :
                 recurse_backwards(grad_fn.BBackward , grad_output = grad_b)
-
         recurse_backwards( self.grad_fn , grad_output = 1)
     
     def sum(self , axis = None , keepdims =False , **kwargs):

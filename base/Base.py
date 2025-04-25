@@ -9,11 +9,24 @@ class BaseArray(np.ndarray):
         # Convert input_array to an ndarray instance
         obj = np.asarray(input_array , **kwargs).view(cls)
         obj.requires_grad = requires_grad
-
+        obj.is_grad_container=False
         obj.grad = np.zeros_like(obj) if requires_grad else None
+        if requires_grad:
+            obj.grad.is_grad_container = True if requires_grad else False
+
         obj.grad_fn = None
         obj._is_leaf = True
         return obj
+    
+
+
+    def __array_finalize__(self, obj): #self is the object that is created and obj is what you inherite from
+        if obj is None: return
+        self.requires_grad = getattr(obj , "requires_grad" , False)
+        self.grad = None
+        self.grad_fn = None
+        self._is_leaf = False
+
     
 
 
@@ -22,8 +35,9 @@ class BaseArray(np.ndarray):
         requires_grad = getattr(self , "requires_grad" , False)
         rep+= f", requires_grad={requires_grad}"
         rep+= f", grad_fn={getattr(self.grad_fn , "_get_name" , lambda: None)()})" if requires_grad else ")"
-
         return rep
+    def __str__(self):
+        return self.__repr__()
 
 
     def _set_next_object_attributes( self , other , result_obj , grad_fn = None , grad_fn_kwargs=None ):
@@ -39,7 +53,7 @@ class BaseArray(np.ndarray):
     def _is_scaler(self):
         return True if self.shape==() else False
     
-    
+
 
 
 
