@@ -27,15 +27,66 @@ class tensor(BaseArray):
         
 
         return result_obj
+    # def __div__(self , other):
+    #     return super(tensor , self).__div__(other)
+    
+    def __matmul__(self , other):
+        if not isinstance(other, tensor):
+            other = tensor(other)
+        result_obj = super(tensor , self).__matmul__(other)
+        if  _any_requires_grad(self, other) and not GlobalConfig.is_propagating_backwards():
+            self._set_next_object_attributes( other , result_obj , grad_fn = matmulBackward)
+        return result_obj
+    
+    def transpose(self):
+        result_obj = super(tensor ,self).transpose()
+        if  _any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
+             self._set_next_object_attributes( other = None , result_obj= result_obj, grad_fn = TransposeBackward )
+
+        return result_obj
+    
+
+    def sum(self , axis = None , keepdims =False , **kwargs):
+        result_object =  super(tensor , self).sum(axis = axis, keepdims =keepdims , **kwargs)
+        if  _any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
+            grad_fn = SumBackward
+            grad_fn_kwargs = {"axis" : axis ,
+                               "keepdims" :keepdims}
+            self._set_next_object_attributes( other=None , result_obj=result_object , grad_fn =grad_fn , grad_fn_kwargs=grad_fn_kwargs )
+        
+        return result_object
+    
+    def mean(self , axis=None, keepdims=False, **kwargs):
+        result_object =  super(tensor , self).mean(axis = axis, keepdims =keepdims , **kwargs)
+        if  _any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
+            grad_fn = MeanBackward
+            grad_fn_kwargs = {"axis" : axis ,
+                               "keepdims" :keepdims}
+            self._set_next_object_attributes( other=None , result_obj=result_object , grad_fn =grad_fn , grad_fn_kwargs=grad_fn_kwargs )
+        
+        return result_object
+
+
+    
+    @property
+    def T(self):
+        return self.transpose()
+
+
     
     @block_in_place_autograd
     def __iadd__(self , other):
         return super(tensor , self).__iadd__(other)
     
-    
+
     @block_in_place_autograd
     def __imul__(self , other):
         return super(tensor , self).__imul__(other)
+    @block_in_place_autograd
+    def __imatmul__(self ,other):
+        return super(tensor , self).__imatmul__(other)
+    
+
         
 
     def backward(self):
@@ -54,19 +105,9 @@ class tensor(BaseArray):
                     recurse_backwards( grad_fn.ABackward , grad_output = grad_a)
                 if isinstance(grad_fn.BBackward , BaseBackwardFunction) :
                     recurse_backwards(grad_fn.BBackward , grad_output = grad_b)
+
             recurse_backwards( self.grad_fn , grad_output = 1)
     
-    def sum(self , axis = None , keepdims =False , **kwargs):
-        result_object =  super(tensor , self).sum(axis = axis, keepdims =keepdims , **kwargs)
-
-        
-        if  _any_requires_grad(self, None) and not GlobalConfig.is_propagating_backwards():
-            grad_fn = SumBackward
-            grad_fn_kwargs = {"axis" : axis ,
-                               "keepdims" :keepdims}
-            self._set_next_object_attributes( other=None , result_obj=result_object , grad_fn =grad_fn , grad_fn_kwargs=grad_fn_kwargs )
-        
-        return result_object
         
 
 

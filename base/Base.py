@@ -29,6 +29,18 @@ class BaseArray(np.ndarray):
         self.grad_fn = None
         self._is_leaf = False
 
+
+
+    def __array_function__(self, func, types, args, kwargs):
+        # Intercept np function calls and return an instance of MyTensor
+        result =   super(BaseArray , self).__array_function__(func, types, args, kwargs)
+        if not isinstance(result, self.__class__):
+            return self.__class__(result)  # Ensure the result is of MyTensor type
+        return result
+    
+
+
+
     
 
 
@@ -87,7 +99,7 @@ class BaseBackwardFunction(object):
         if getattr(self.ctx.a , "_is_leaf", False) and isinstance(grad_a ,BaseArray):
             self.ctx.a.grad += grad_a
 
-        if getattr(self.ctx.b , "_is_leaf", False)and isinstance(grad_b ,BaseArray):
+        if getattr(self.ctx.b , "_is_leaf", False) and isinstance(grad_b ,BaseArray):
             self.ctx.b.grad += grad_b
 
 

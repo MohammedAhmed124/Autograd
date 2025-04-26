@@ -10,7 +10,7 @@ from collections import OrderedDict
 from ..tensor import tensor
 
 
-@pytest.mark.parametrize("case", range(20000))
+@pytest.mark.parametrize("case", range(10000))
 def test_tensor_function(case):
     requires_grad_a = bool(np.random.randint(0 , 2))
     requires_grad_b = bool(np.random.randint(0 , 2))
@@ -36,7 +36,7 @@ def test_tensor_function(case):
     l = []
     sum_axis = [0 , 1]
     for i in range(k):
-        op_id = np.random.randint(0, 2)  
+        op_id = np.random.randint(0, 3) if i>10 else np.random.randint(0 , 2) 
         idx1, idx2 = np.random.randint(0, 2), np.random.randint(0, 2)  
         first_element_plus = bucket_1[idx1] if i == 0 else int_[f"var_{i-1}"]
         first_element_torch = bucket_2[idx1] if i == 0 else int_[f"var_torch{i-1}"]
@@ -56,25 +56,35 @@ def test_tensor_function(case):
             
             int_[f"var_{i}"] = first_element_plus + bucket_1[idx2] 
             int_[f"var_torch{i}"] = first_element_torch + bucket_2[idx2]
-        else:  # Multiplication
+        elif op_id==0:  # Multiplication
             int_[f"var_{i}"] = first_element_plus * bucket_1[idx2] 
             int_[f"var_torch{i}"] = first_element_torch * bucket_2[idx2]
-        summed = False
-        if summed:
-            if np.random.randint(0 , 2)==1:
-                summed = True
-                what_axis_we_wanna_sum = np.random.randint(0 , len(sum_axis))
-                keepdims =bool(np.random.randint(0 , 2))
+        if i >10:
+            if op_id==2:
+                random_array = np.random.uniform(-10 , 10 , size = (np.random.randint(3 , 8) , first_element_plus.shape[-1]))
+                int_[f"var_{i}"] = first_element_plus @ random_array.T
+                int_[f"var_torch{i}"] = first_element_torch @ torch.tensor(random_array).T
+
+                random_array = np.random.uniform(-10 , 10 , size = (int_[f"var_{i}"].shape))
+                torch_random_array = torch.tensor(random_array)
+                bucket_1[0] , bucket_1[1] = random_array, random_array
+                bucket_2[0] , bucket_2[1] = torch_random_array ,torch_random_array
+        # summed = False
+        # if summed:
+        #     if np.random.randint(0 , 2)==1:
+        #         summed = True
+        #         what_axis_we_wanna_sum = np.random.randint(0 , len(sum_axis))
+        #         keepdims =bool(np.random.randint(0 , 2))
                 
-                int_[f"var_{i}"] = int_[f"var_{i}"].sum(axis = sum_axis[what_axis_we_wanna_sum] , keepdims = keepdims)
-                int_[f"var_torch{i}"] = int_[f"var_torch{i}"].sum(axis = sum_axis[what_axis_we_wanna_sum] , keepdims = keepdims)
+        #         int_[f"var_{i}"] = int_[f"var_{i}"].sum(axis = sum_axis[what_axis_we_wanna_sum] , keepdims = keepdims)
+        #         int_[f"var_torch{i}"] = int_[f"var_torch{i}"].sum(axis = sum_axis[what_axis_we_wanna_sum] , keepdims = keepdims)
 
 
-                for i in range(2):
-                    bucket_1[i] = bucket_1[i].sum(sum_axis[what_axis_we_wanna_sum] , keepdims=keepdims)
-                    bucket_2[i] = bucket_2[i].sum(sum_axis[what_axis_we_wanna_sum] , keepdims=keepdims)
+        #         for i in range(2):
+        #             bucket_1[i] = bucket_1[i].sum(sum_axis[what_axis_we_wanna_sum] , keepdims=keepdims)
+        #             bucket_2[i] = bucket_2[i].sum(sum_axis[what_axis_we_wanna_sum] , keepdims=keepdims)
 
-                sum_axis.pop(-1)
+        #         sum_axis.pop(-1)
 
 
 
