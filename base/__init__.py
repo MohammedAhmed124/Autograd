@@ -1,4 +1,5 @@
-from .Base import BaseArray , BaseBackwardFunction
+from .BaseArray import BaseArray
+from .BaseFunction import BaseBackwardFunction
 
 
 __all__ = [
