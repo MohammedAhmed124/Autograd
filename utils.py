@@ -6,7 +6,7 @@ from functools import wraps
 
 def _any_requires_grad(*args):
     """Utility to check if any of the tensors in the args require gradients."""
-    return any(getattr(x, 'requires_grad', False) for x in args)
+    return any(getattr(x, '_requires_grad', False) for x in args)
 
 
 
@@ -15,9 +15,9 @@ class ContextObject:
         self.a = a
         self.b = b
     def _a_requires_grad(self):
-        return getattr(self.a , "requires_grad" , False)
+        return getattr(self.a , "_requires_grad" , False)
     def _b_requires_grad(self):
-        return getattr(self.b , "requires_grad" , False)
+        return getattr(self.b , "_requires_grad" , False)
 
 
 def block_in_place_autograd(in_place_func):
