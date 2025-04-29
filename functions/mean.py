@@ -1,6 +1,6 @@
 from ..base import BaseBackwardFunction , BaseArray
 import numpy as np
-
+from math import prod
 
 
 class MeanBackward(BaseBackwardFunction):
@@ -15,7 +15,8 @@ class MeanBackward(BaseBackwardFunction):
         axis = self.axis
         keepdims = self.keepdims
         if axis is None:
-            grad_output = np.ones_like(input_)*grad_output
+            ones_matrix = np.ones_like(input_)
+            grad_output = (ones_matrix*grad_output)/prod(x for x in ones_matrix.shape)
         else:
         
             if isinstance(axis , int):
@@ -33,6 +34,8 @@ class MeanBackward(BaseBackwardFunction):
                 axis_mul*=input_.shape[ax]
 
             grad_output = grad_output/axis_mul
+
+
 
 
         return (grad_output , None)

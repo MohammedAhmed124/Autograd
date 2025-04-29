@@ -10,9 +10,8 @@ class MulBackward(BaseBackwardFunction):
         a, b = self.ctx.a, self.ctx.b
 
 
-        grad_a = grad_output*np.full_like(a ,b )if self.ctx._a_requires_grad() else None
-        grad_b = grad_output*np.full_like(a ,a) if self.ctx._b_requires_grad() else None
-
+        grad_a = grad_output*b if self.ctx._a_requires_grad() else None
+        grad_b = grad_output*a if self.ctx._b_requires_grad() else None
 
 
 

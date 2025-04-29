@@ -14,8 +14,4 @@ class matmulBackward(BaseBackwardFunction):
         grad_a = grad_output @ b.T  if self.ctx._a_requires_grad() else None
         grad_b = a.T @ grad_output if self.ctx._b_requires_grad() else None
 
-        # print(f"grad_output_a = grad_output * b.T\n" , grad_output , "\n" , b.T , "\n" , grad_a , end = "\n\n\n\n")
-
-        # print(f"grad_output_b = a.T @ grad_output\n" , a.T , "\n" ,  grad_output  ,"\n" , grad_b , end = "\n\n\n\n")
-
         return grad_a , grad_b
