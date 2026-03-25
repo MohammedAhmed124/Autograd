@@ -1,6 +1,8 @@
 
 # Autograd
 
+![Computational Graph](graph.png)
+
 A mini homemade autograd engine built with NumPy.
 
 This project is a simple automatic differentiation engine inspired by PyTorch’s `autograd`.  
